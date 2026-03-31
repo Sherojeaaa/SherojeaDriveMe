@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DriveMe Prototype</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,sans-serif;background:#f3f4f6;min-height:100vh;padding:20px}
+.proto-wrap{display:flex;gap:24px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.phone{width:300px;height:620px;border-radius:36px;border:6px solid #1a1a2e;background:#f5f5f5;overflow:hidden;position:relative;flex-shrink:0}
+.phone-inner{width:100%;height:100%;overflow:hidden;position:relative}
+.screen{position:absolute;inset:0;display:none;flex-direction:column;background:#fff}
+.screen.active{display:flex}
+.notch{width:90px;height:22px;background:#1a1a2e;border-radius:0 0 14px 14px;margin:0 auto;flex-shrink:0}
+.map-bg{flex:1;background:#e8f0e8;position:relative;overflow:hidden}
+.map-road-h{position:absolute;height:6px;background:#fff;opacity:.7}
+.map-road-v{position:absolute;width:6px;background:#fff;opacity:.7}
+.status-bar{display:flex;justify-content:space-between;align-items:center;padding:4px 16px 0;font-size:10px;font-weight:500;color:#1a1a2e;flex-shrink:0}
+.bottom-card{background:#fff;border-radius:20px 20px 0 0;padding:16px;border-top:0.5px solid #e0e0e0}
+.btn-primary{background:#1a1a2e;color:#fff;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;width:100%;cursor:pointer;margin-top:10px}
+.btn-primary:active{opacity:.85}
+.btn-secondary{background:transparent;color:#1a1a2e;border:1.5px solid #1a1a2e;border-radius:12px;padding:12px;font-size:14px;font-weight:500;width:100%;cursor:pointer;margin-top:8px}
+.input-box{border:1px solid #e0e0e0;border-radius:10px;padding:10px 12px;font-size:13px;color:#1a1a2e;display:flex;align-items:center;gap:8px;margin-bottom:8px;background:#fafafa;cursor:pointer}
+.dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.label-sm{font-size:11px;color:#888;margin-bottom:4px}
+.label-md{font-size:13px;font-weight:500;color:#1a1a2e}
+.label-lg{font-size:18px;font-weight:500;color:#1a1a2e;margin-bottom:4px}
+.label-xs{font-size:11px;color:#888}
+.fare-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid #f0f0f0}
+.driver-row{display:flex;align-items:center;gap:12px;padding:10px 0}
+.avatar{width:44px;height:44px;border-radius:50%;background:#1a1a2e;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:500;flex-shrink:0}
+.stars{color:#f59e0b;font-size:12px;letter-spacing:1px}
+.pill{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:500}
+.pill-green{background:#e8f5e9;color:#2e7d32}
+.pill-amber{background:#fff8e1;color:#e65100}
+.pill-blue{background:#e3f2fd;color:#1565c0}
+.pill-red{background:#fce8e8;color:#c62828}
+.action-row{display:flex;gap:8px;margin-top:10px}
+.icon-btn{flex:1;border:1px solid #e0e0e0;border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;background:#fafafa;font-size:11px;color:#555}
+.icon-btn:active{background:#f0f0f0}
+.icon-shape{width:22px;height:22px;margin:0 auto 4px;display:flex;align-items:center;justify-content:center}
+.sos{background:#dc2626;color:#fff;border:none;border-radius:10px;padding:10px;font-size:12px;font-weight:500;cursor:pointer;flex:1}
+.online-badge{display:flex;align-items:center;gap:6px;padding:8px 14px;background:#e8f5e9;border-radius:10px;margin-bottom:12px}
+.online-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.earnings-row{display:flex;justify-content:space-between;background:#f8f8f8;border-radius:10px;padding:12px;margin-bottom:10px}
+.earn-item{text-align:center}
+.trip-step{display:flex;align-items:center;gap:10px;padding:8px 0}
+.step-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.step-line{width:2px;height:20px;background:#e0e0e0;margin-left:4px}
+.offer-card{background:#1a1a2e;border-radius:16px;padding:14px;margin-bottom:12px}
+.rating-stars{display:flex;gap:6px;justify-content:center;margin:12px 0}
+.star{width:32px;height:32px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px}
+.progress-bar{height:4px;background:#e0e0e0;border-radius:2px;overflow:hidden;margin:10px 0}
+.progress-fill{height:100%;background:#1a1a2e;border-radius:2px;transition:width .5s}
+.header-bar{display:flex;align-items:center;padding:10px 16px 6px;gap:10px}
+.back-btn{width:28px;height:28px;border-radius:50%;background:#f0f0f0;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;color:#1a1a2e}
+.section-label{font-size:10px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.ping{animation:ping 1.2s ease-in-out infinite}
+@keyframes ping{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.4);opacity:.6}}
+.pulse{animation:puls 2s ease-in-out infinite}
+@keyframes puls{0%,100%{opacity:1}50%{opacity:.5}}
+.nav-btn{font-size:10px;padding:4px 8px;border:0.5px solid #ccc;border-radius:6px;background:transparent;cursor:pointer;color:#555}
+.phone-label{text-align:center;font-size:12px;font-weight:500;color:#555;margin-bottom:8px}
+.nav-row{display:flex;justify-content:center;gap:6px;margin-top:10px;flex-wrap:wrap;max-width:300px}
+</style>
+</head>
+<body>
+<div class="proto-wrap">
+
+  <!-- CUSTOMER PHONE -->
+  <div>
+    <p class="phone-label">Customer app</p>
+    <div class="phone">
+      <div class="phone-inner" id="customer-phone">
+
+        <!-- HOME -->
+        <div class="screen active" id="c-home">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:41</span><span>DriveMe</span></div>
+          <div class="map-bg">
+            <div class="map-road-h" style="top:40%;left:0;right:0"></div>
+            <div class="map-road-h" style="top:65%;left:0;right:0"></div>
+            <div class="map-road-v" style="left:35%;top:0;bottom:0"></div>
+            <div class="map-road-v" style="left:70%;top:0;bottom:0"></div>
+            <div style="position:absolute;top:38%;left:33%;width:14px;height:14px;background:#22c55e;border-radius:50%;border:3px solid #fff" class="ping"></div>
+            <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);background:rgba(255,255,255,.9);border-radius:8px;padding:4px 10px;font-size:11px;color:#1a1a2e;font-weight:500">Quezon City, PH</div>
+          </div>
+          <div class="bottom-card">
+            <p class="label-lg">Book a designated driver</p>
+            <p style="font-size:12px;color:#888;margin-bottom:12px">We drive your car — you relax</p>
+            <div class="input-box" onclick="cShow('c-setloc')">
+              <div class="dot" style="background:#22c55e"></div>
+              <span style="font-size:13px;color:#1a1a2e">My current location</span>
+            </div>
+            <div class="input-box" onclick="cShow('c-setloc')">
+              <div class="dot" style="background:#ef4444"></div>
+              <span style="font-size:13px;color:#888">Where to?</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- SET LOCATION -->
+        <div class="screen" id="c-setloc">
+          <div class="notch"></div>
+          <div class="header-bar">
+            <button class="back-btn" onclick="cShow('c-home')">&#8592;</button>
+            <span style="font-size:14px;font-weight:500;color:#1a1a2e">Set destination</span>
+          </div>
+          <div style="padding:0 16px;flex:1">
+            <div class="input-box" style="background:#fff;border-color:#1a1a2e">
+              <div class="dot" style="background:#22c55e"></div>
+              <span style="font-size:13px;color:#1a1a2e">Current location</span>
+            </div>
+            <div class="input-box" style="background:#fff;border-color:#1a1a2e">
+              <div class="dot" style="background:#ef4444"></div>
+              <span style="font-size:13px;color:#1a1a2e">SM North EDSA, Quezon City</span>
+            </div>
+            <div style="border-top:0.5px solid #f0f0f0;padding-top:12px;margin-top:4px">
+              <p class="section-label">Recent places</p>
+              <div class="input-box" onclick="cShow('c-fare')" style="background:#fafafa">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#888" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="#888" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <div><div style="font-size:13px;color:#1a1a2e">SM North EDSA</div><div class="label-xs">Quezon Ave, QC</div></div>
+              </div>
+              <div class="input-box" onclick="cShow('c-fare')" style="background:#fafafa">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#888" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="#888" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <div><div style="font-size:13px;color:#1a1a2e">Robinsons Galleria</div><div class="label-xs">EDSA, Ortigas</div></div>
+              </div>
+              <div class="input-box" onclick="cShow('c-fare')" style="background:#fafafa">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#888" stroke-width="1.2"/><path d="M8 5v3l2 2" stroke="#888" stroke-width="1.2" stroke-linecap="round"/></svg>
+                <div><div style="font-size:13px;color:#1a1a2e">Eastwood City</div><div class="label-xs">Libis, QC</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FARE ESTIMATE -->
+        <div class="screen" id="c-fare">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:41</span><span>DriveMe</span></div>
+          <div class="map-bg">
+            <div class="map-road-h" style="top:40%;left:0;right:0"></div>
+            <div class="map-road-h" style="top:65%;left:0;right:0"></div>
+            <div class="map-road-v" style="left:35%;top:0;bottom:0"></div>
+            <div class="map-road-v" style="left:70%;top:0;bottom:0"></div>
+            <div style="position:absolute;top:38%;left:33%;width:10px;height:10px;background:#22c55e;border-radius:50%;border:2px solid #fff"></div>
+            <div style="position:absolute;top:20%;left:62%;width:10px;height:10px;background:#ef4444;border-radius:50%;border:2px solid #fff"></div>
+            <svg style="position:absolute;inset:0;width:100%;height:100%" viewBox="0 0 288 200" preserveAspectRatio="none">
+              <path d="M100 80 L100 55 L180 55" stroke="#1a1a2e" stroke-width="2.5" fill="none" stroke-dasharray="5 3" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+              <p class="label-lg" style="margin:0">Fare estimate</p>
+              <span class="pill pill-green">1x surge</span>
+            </div>
+            <div class="fare-row"><span class="label-xs">Base fare</span><span class="label-md">₱80.00</span></div>
+            <div class="fare-row"><span class="label-xs">Distance (4.2 km)</span><span class="label-md">₱63.00</span></div>
+            <div class="fare-row"><span class="label-xs">Est. time (18 min)</span><span class="label-md">₱36.00</span></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0 4px">
+              <span style="font-size:14px;font-weight:500;color:#1a1a2e">Total estimate</span>
+              <span style="font-size:20px;font-weight:500;color:#1a1a2e">₱179</span>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:4px">
+              <div style="flex:1;border:1.5px solid #e0e0e0;border-radius:10px;padding:9px 8px;text-align:center;cursor:pointer" onclick="setPayment(this)"><div style="font-size:11px;color:#888">Cash</div></div>
+              <div style="flex:1;border:1.5px solid #1a1a2e;border-radius:10px;padding:9px 8px;text-align:center;cursor:pointer;background:#f0f0f8" onclick="setPayment(this)"><div style="font-size:11px;color:#1a1a2e;font-weight:500">GCash</div></div>
+              <div style="flex:1;border:1.5px solid #e0e0e0;border-radius:10px;padding:9px 8px;text-align:center;cursor:pointer" onclick="setPayment(this)"><div style="font-size:11px;color:#888">Maya</div></div>
+            </div>
+            <button class="btn-primary" onclick="cShow('c-searching');startProgress()">Book driver — ₱179</button>
+          </div>
+        </div>
+
+        <!-- SEARCHING -->
+        <div class="screen" id="c-searching">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:42</span><span>DriveMe</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="width:60px;height:60px;border-radius:50%;background:#1a1a2e;margin:0 auto 12px;display:flex;align-items:center;justify-content:center" class="ping">
+                <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><circle cx="14" cy="14" r="10" stroke="#fff" stroke-width="1.5"/><path d="M14 8v6l4 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <p style="font-size:13px;color:#1a1a2e;font-weight:500">Finding your driver...</p>
+              <p style="font-size:11px;color:#888;margin-top:4px">3 drivers nearby</p>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <p class="label-lg">Searching for a driver</p>
+            <p style="font-size:12px;color:#888;margin-bottom:12px">Finding the nearest available driver</p>
+            <div class="progress-bar"><div class="progress-fill" id="search-progress" style="width:0%"></div></div>
+            <div class="trip-step"><div class="step-dot" style="background:#22c55e"></div><span style="font-size:12px;color:#1a1a2e">Current location</span></div>
+            <div class="step-line" style="margin-left:9px"></div>
+            <div class="trip-step"><div class="step-dot" style="background:#ef4444"></div><span style="font-size:12px;color:#1a1a2e">SM North EDSA, QC</span></div>
+            <button class="btn-secondary" onclick="cShow('c-fare')">Cancel</button>
+          </div>
+        </div>
+
+        <!-- DRIVER ACCEPTED -->
+        <div class="screen" id="c-accepted">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:43</span><span>DriveMe</span></div>
+          <div class="map-bg" style="position:relative">
+            <div class="map-road-h" style="top:40%;left:0;right:0"></div>
+            <div class="map-road-v" style="left:50%;top:0;bottom:0"></div>
+            <div style="position:absolute;top:38%;left:48%;width:10px;height:10px;background:#22c55e;border-radius:50%;border:2px solid #fff"></div>
+            <div style="position:absolute;top:22%;left:30%;transform:rotate(-30deg);font-size:18px" class="pulse">&#9651;</div>
+            <div style="position:absolute;top:18%;left:26%;background:rgba(255,255,255,.9);border-radius:6px;padding:3px 8px;font-size:10px;color:#1a1a2e">Carlos R. • 2 min</div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <p class="label-md">Your driver is on the way</p>
+              <span class="pill pill-blue">~2 min</span>
+            </div>
+            <div class="driver-row">
+              <div class="avatar">CR</div>
+              <div style="flex:1">
+                <p class="label-md">Carlos Reyes</p>
+                <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+                <p class="label-xs">4.9 · 312 trips · Honda Wave folding bike</p>
+              </div>
+              <span class="pill pill-green">Online</span>
+            </div>
+            <div class="action-row">
+              <div class="icon-btn"><div class="icon-shape"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4h10v8a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" stroke="#555" stroke-width="1.2"/><path d="M7 4V3a2 2 0 014 0v1" stroke="#555" stroke-width="1.2"/></svg></div>Chat</div>
+              <div class="icon-btn"><div class="icon-shape"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 4l1.5 3.5-2 2c.9 1.8 2.2 3.1 4 4l2-2L14 13l-1.5 2C8.5 15 3 9.5 3 5.5L5 4z" stroke="#555" stroke-width="1.2"/></svg></div>Call</div>
+              <div class="icon-btn"><div class="icon-shape"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2l.9 5h5l-4 3 1.5 5L9 12l-3.4 3L7 10 3 7h5z" stroke="#555" stroke-width="1.2"/></svg></div>Share</div>
+              <button class="sos" onclick="cShow('c-sos')">SOS</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- IN PROGRESS -->
+        <div class="screen" id="c-inprogress">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:51</span><span>DriveMe</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:#555;margin-bottom:6px">Trip in progress</div>
+              <div style="font-size:28px;font-weight:500;color:#1a1a2e">14:23</div>
+              <div style="font-size:11px;color:#888;margin-top:4px">3.1 km remaining</div>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+              <p class="label-md">On the way to your destination</p>
+              <span class="pill pill-amber">In progress</span>
+            </div>
+            <div class="driver-row" style="padding:0 0 10px;border-bottom:0.5px solid #f0f0f0">
+              <div class="avatar">CR</div>
+              <div style="flex:1"><p class="label-md">Carlos Reyes</p><p class="label-xs">Driving your Toyota Vios</p></div>
+            </div>
+            <div class="fare-row"><span class="label-xs">Estimated fare</span><span class="label-md">₱179</span></div>
+            <div class="fare-row"><span class="label-xs">Dropoff</span><span style="font-size:12px;color:#555">SM North EDSA, QC</span></div>
+            <div class="action-row" style="margin-top:10px">
+              <div class="icon-btn"><div class="icon-shape"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M4 4h10v8a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" stroke="#555" stroke-width="1.2"/><path d="M7 4V3a2 2 0 014 0v1" stroke="#555" stroke-width="1.2"/></svg></div>Chat</div>
+              <div class="icon-btn"><div class="icon-shape"><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M5 4l1.5 3.5-2 2c.9 1.8 2.2 3.1 4 4l2-2L14 13l-1.5 2C8.5 15 3 9.5 3 5.5L5 4z" stroke="#555" stroke-width="1.2"/></svg></div>Call</div>
+              <button class="sos" onclick="cShow('c-sos')">SOS</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- COMPLETE + RATE -->
+        <div class="screen" id="c-complete">
+          <div class="notch"></div>
+          <div class="status-bar"><span>10:08</span><span>DriveMe</span></div>
+          <div style="flex:1;padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="width:64px;height:64px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none"><path d="M8 17l5 5 11-11" stroke="#22c55e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <p style="font-size:18px;font-weight:500;color:#1a1a2e;margin-bottom:4px">Trip complete!</p>
+            <p style="font-size:12px;color:#888;margin-bottom:16px;text-align:center">You've arrived at SM North EDSA</p>
+            <div style="background:#f8f8f8;border-radius:12px;padding:14px;width:100%;margin-bottom:14px">
+              <div class="fare-row"><span class="label-xs">Distance</span><span class="label-md">4.2 km</span></div>
+              <div class="fare-row"><span class="label-xs">Duration</span><span class="label-md">22 min</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:14px;font-weight:500">Total paid</span><span style="font-size:20px;font-weight:500;color:#1a1a2e">₱179</span></div>
+            </div>
+            <p style="font-size:13px;color:#1a1a2e;margin-bottom:6px">Rate Carlos Reyes</p>
+            <div class="rating-stars" id="cust-stars">
+              <span class="star" onclick="setRating(1)">&#9733;</span>
+              <span class="star" onclick="setRating(2)">&#9733;</span>
+              <span class="star" onclick="setRating(3)">&#9733;</span>
+              <span class="star" onclick="setRating(4)">&#9733;</span>
+              <span class="star" onclick="setRating(5)">&#9733;</span>
+            </div>
+          </div>
+          <div style="padding:0 16px 16px"><button class="btn-primary" onclick="cShow('c-home')">Done</button></div>
+        </div>
+
+        <!-- SOS -->
+        <div class="screen" id="c-sos">
+          <div class="notch"></div>
+          <div style="flex:1;padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="width:80px;height:80px;border-radius:50%;background:#dc2626;display:flex;align-items:center;justify-content:center;margin-bottom:16px" class="ping">
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><path d="M18 10v10M18 24v2" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/></svg>
+            </div>
+            <p style="font-size:18px;font-weight:500;color:#dc2626;margin-bottom:6px">Emergency alert sent</p>
+            <p style="font-size:12px;color:#888;text-align:center;margin-bottom:20px">Your location has been shared with DriveMe support and your emergency contact</p>
+            <div style="background:#fff5f5;border:1px solid #fca5a5;border-radius:12px;padding:12px;width:100%;margin-bottom:14px">
+              <p style="font-size:12px;font-weight:500;color:#dc2626;margin-bottom:4px">Emergency contacts notified:</p>
+              <p style="font-size:12px;color:#555">Maria Santos (Mom) · +63 917 xxx xxxx</p>
+              <p style="font-size:12px;color:#555">DriveMe Support · 1800-DRIVEME</p>
+            </div>
+            <button class="btn-secondary" onclick="cShow('c-accepted')">I am safe — cancel alert</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn" onclick="cShow('c-home')">Home</button>
+      <button class="nav-btn" onclick="cShow('c-fare')">Fare</button>
+      <button class="nav-btn" onclick="cShow('c-searching');startProgress()">Searching</button>
+      <button class="nav-btn" onclick="cShow('c-accepted')">Accepted</button>
+      <button class="nav-btn" onclick="cShow('c-inprogress')">In trip</button>
+      <button class="nav-btn" onclick="cShow('c-complete')">Complete</button>
+    </div>
+  </div>
+
+  <!-- DRIVER PHONE -->
+  <div>
+    <p class="phone-label">Driver app</p>
+    <div class="phone">
+      <div class="phone-inner" id="driver-phone">
+
+        <!-- OFFLINE -->
+        <div class="screen active" id="d-home">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:38</span><span>DriveMe Driver</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:#888">You are offline</div>
+              <div style="width:12px;height:12px;border-radius:50%;background:#d1d5db;margin:8px auto"></div>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div><p class="label-lg" style="margin:0">Carlos Reyes</p><p class="label-xs">Driver · ⭐ 4.9 · 312 trips</p></div>
+              <div class="avatar">CR</div>
+            </div>
+            <div class="earnings-row">
+              <div class="earn-item"><div class="label-xs">Today</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">₱1,240</div></div>
+              <div class="earn-item"><div class="label-xs">Trips</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">6</div></div>
+              <div class="earn-item"><div class="label-xs">Rating</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">4.9</div></div>
+            </div>
+            <button class="btn-primary" onclick="dShow('d-online')">Go online</button>
+          </div>
+        </div>
+
+        <!-- ONLINE WAITING -->
+        <div class="screen" id="d-online">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:41</span><span>DriveMe Driver</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="width:14px;height:14px;border-radius:50%;background:#22c55e;margin:0 auto 8px" class="ping"></div>
+              <div style="font-size:11px;color:#555">Online — waiting for bookings</div>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <div class="online-badge"><div class="online-dot"></div><span style="font-size:12px;font-weight:500;color:#15803d">You are online</span></div>
+            <div class="earnings-row">
+              <div class="earn-item"><div class="label-xs">Today</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">₱1,240</div></div>
+              <div class="earn-item"><div class="label-xs">Trips</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">6</div></div>
+              <div class="earn-item"><div class="label-xs">Online</div><div style="font-size:16px;font-weight:500;color:#1a1a2e">2h 14m</div></div>
+            </div>
+            <button class="btn-secondary" onclick="dShow('d-home')">Go offline</button>
+            <button class="btn-primary" onclick="dShow('d-offer');startOffer()" style="margin-top:8px;font-size:12px;background:#534AB7">Simulate incoming booking ↗</button>
+          </div>
+        </div>
+
+        <!-- BOOKING OFFER -->
+        <div class="screen" id="d-offer">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:42</span><span>New booking!</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center">
+              <div style="font-size:11px;color:#555;margin-bottom:4px">Customer pickup</div>
+              <div style="width:12px;height:12px;background:#22c55e;border-radius:50%;margin:0 auto 4px;border:2px solid #fff"></div>
+              <div style="font-size:10px;color:#888">0.8 km from you</div>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <p class="label-md">New booking request</p>
+              <span id="offer-timer" style="font-size:13px;font-weight:500;color:#dc2626">30s</span>
+            </div>
+            <div class="progress-bar"><div id="offer-progress" style="height:4px;background:#dc2626;border-radius:2px;transition:width .9s linear;width:100%"></div></div>
+            <div class="offer-card">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+                <div>
+                  <div style="font-size:10px;color:#aaa;margin-bottom:2px">Pickup</div>
+                  <div style="font-size:12px;font-weight:500;color:#fff">Mapayapa Village, QC</div>
+                </div>
+                <span class="pill" style="background:#3C3489;color:#CECBF6;font-size:10px">0.8 km</span>
+              </div>
+              <div style="border-top:0.5px solid rgba(255,255,255,.15);padding-top:10px;display:flex;justify-content:space-between">
+                <div><div style="font-size:10px;color:#aaa;margin-bottom:2px">Dropoff</div><div style="font-size:12px;font-weight:500;color:#fff">SM North EDSA</div></div>
+                <div style="text-align:right"><div style="font-size:10px;color:#aaa;margin-bottom:2px">Fare</div><div style="font-size:16px;font-weight:500;color:#fff">₱179</div></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="dShow('d-online')" style="flex:1;background:#f0f0f0;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;color:#1a1a2e">Decline</button>
+              <button onclick="dShow('d-enroute')" style="flex:2;background:#22c55e;border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;color:#fff">Accept</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EN ROUTE -->
+        <div class="screen" id="d-enroute">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:43</span><span>DriveMe Driver</span></div>
+          <div class="map-bg" style="position:relative">
+            <div class="map-road-h" style="top:50%;left:0;right:0"></div>
+            <div class="map-road-v" style="left:50%;top:0;bottom:0"></div>
+            <div style="position:absolute;top:48%;left:48%;width:10px;height:10px;background:#22c55e;border-radius:50%;border:2px solid #fff"></div>
+            <div style="position:absolute;top:25%;left:30%;font-size:16px">&#9651;</div>
+            <div style="position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#1a1a2e;border-radius:8px;padding:5px 12px;font-size:11px;color:#fff;font-weight:500">Turn left on Quezon Ave</div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <p class="label-md">Heading to pickup</p>
+              <span class="pill pill-blue">~2 min</span>
+            </div>
+            <div class="driver-row" style="padding-bottom:10px;border-bottom:0.5px solid #f0f0f0">
+              <div class="avatar" style="background:#534AB7">A</div>
+              <div style="flex:1"><p class="label-md">Ana dela Cruz</p><p class="label-xs">Toyota Vios · AAA 1234 · Silver</p></div>
+            </div>
+            <div style="margin-top:10px">
+              <div class="fare-row"><span class="label-xs">Pickup</span><span style="font-size:12px;color:#555">Mapayapa Village, QC</span></div>
+              <div class="fare-row"><span class="label-xs">Dropoff</span><span style="font-size:12px;color:#555">SM North EDSA</span></div>
+              <div class="fare-row"><span class="label-xs">Trip fare</span><span class="label-md">₱179</span></div>
+            </div>
+            <button class="btn-primary" onclick="dShow('d-arrived')">I've arrived at pickup</button>
+          </div>
+        </div>
+
+        <!-- ARRIVED AT PICKUP -->
+        <div class="screen" id="d-arrived">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:45</span><span>DriveMe Driver</span></div>
+          <div class="map-bg" style="display:flex;align-items:center;justify-content:center">
+            <div style="text-align:center;background:rgba(255,255,255,.9);border-radius:12px;padding:12px 20px">
+              <div style="font-size:11px;color:#888;margin-bottom:4px">Waiting for customer</div>
+              <div style="font-size:24px;font-weight:500;color:#1a1a2e" id="wait-timer">0:00</div>
+              <div style="font-size:10px;color:#888;margin-top:2px">No-show after 5 min</div>
+            </div>
+          </div>
+          <div class="bottom-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <p class="label-md">Arrived at pickup</p>
+              <span class="pill pill-green">Waiting</span>
+            </div>
+            <div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:10px;padding:10px;margin-bottom:12px">
+              <p style="font-size:12px;font-weight:500;color:#92400e">Before starting:</p>
+              <p style="font-size:11px;color:#78350f;margin-top:4px">1. Check that your folding bike fits in the trunk</p>
+              <p style="font-size:11px;color:#78350f">2. Verify the customer's ID in the app</p>
+              <p style="font-size:11px;color:#78350f">3. Confirm destination with customer</p>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button onclick="dShow('d-online')" style="flex:1;background:#f0f0f0;border:none;border-radius:12px;padding:12px;font-size:12px;cursor:pointer;color:#555">No-show</button>
+              <button onclick="dShow('d-driving')" style="flex:2;background:#1a1a2e;border:none;border-radius:12px;padding:12px;font-size:13px;font-weight:500;cursor:pointer;color:#fff">Start trip</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DRIVING -->
+        <div class="screen" id="d-driving">
+          <div class="notch"></div>
+          <div class="status-bar"><span>9:51</span><span>DriveMe Driver</span></div>
+          <div class="map-bg" style="position:relative">
+            <div class="map-road-h" style="top:50%;left:0;right:0"></div>
+            <div class="map-road-v" style="left:60%;top:0;bottom:0"></div>
+            <div style="position:absolute;top:60%;left:55%;width:10px;height:10px;background:#ef4444;border-radius:50%;border:2px solid #fff"></div>
+            <div style="position:absolute;top:20px;left:50%;transform:translateX(-50%);background:#22c55e;border-radius:8px;padding:5px 12px;font-size:11px;color:#fff;font-weight:500">Continue on EDSA · 2.1 km</div>
+          </div>
+          <div class="bottom-card" style="padding:12px 16px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <p class="label-md">Driving to destination</p>
+              <span class="pill pill-amber">In progress</span>
+            </div>
+            <div class="fare-row"><span class="label-xs">Distance left</span><span class="label-md">2.1 km</span></div>
+            <div class="fare-row"><span class="label-xs">Est. time</span><span class="label-md">~8 min</span></div>
+            <div class="fare-row"><span class="label-xs">Dropoff</span><span style="font-size:12px;color:#555">SM North EDSA, QC</span></div>
+            <button class="btn-primary" onclick="dShow('d-done')" style="margin-top:10px">End trip — arrived at destination</button>
+          </div>
+        </div>
+
+        <!-- TRIP DONE -->
+        <div class="screen" id="d-done">
+          <div class="notch"></div>
+          <div class="status-bar"><span>10:08</span><span>DriveMe Driver</span></div>
+          <div style="flex:1;padding:20px 16px;display:flex;flex-direction:column;align-items:center;justify-content:center">
+            <div style="width:56px;height:56px;border-radius:50%;background:#e8f5e9;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
+              <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M7 15l4 4 10-10" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <p style="font-size:16px;font-weight:500;color:#1a1a2e;margin-bottom:4px">Trip complete!</p>
+            <p style="font-size:11px;color:#888;margin-bottom:16px">Payment collected from customer</p>
+            <div style="background:#f8f8f8;border-radius:12px;padding:14px;width:100%;margin-bottom:14px">
+              <div class="fare-row"><span class="label-xs">Trip fare</span><span class="label-md">₱179</span></div>
+              <div class="fare-row"><span class="label-xs">Platform fee (20%)</span><span style="font-size:13px;color:#ef4444">–₱35.80</span></div>
+              <div style="display:flex;justify-content:space-between;padding:8px 0"><span style="font-size:14px;font-weight:500">Your earnings</span><span style="font-size:18px;font-weight:500;color:#22c55e">₱143.20</span></div>
+            </div>
+            <div class="earnings-row" style="width:100%">
+              <div class="earn-item"><div class="label-xs">Today total</div><div style="font-size:15px;font-weight:500;color:#1a1a2e">₱1,383</div></div>
+              <div class="earn-item"><div class="label-xs">Trips today</div><div style="font-size:15px;font-weight:500;color:#1a1a2e">7</div></div>
+              <div class="earn-item"><div class="label-xs">Online</div><div style="font-size:15px;font-weight:500;color:#1a1a2e">3h 1m</div></div>
+            </div>
+          </div>
+          <div style="padding:0 16px 16px"><button class="btn-primary" onclick="dShow('d-online')">Go back online</button></div>
+        </div>
+
+      </div>
+    </div>
+    <div class="nav-row">
+      <button class="nav-btn" onclick="dShow('d-home')">Offline</button>
+      <button class="nav-btn" onclick="dShow('d-online')">Online</button>
+      <button class="nav-btn" onclick="dShow('d-offer');startOffer()">Offer</button>
+      <button class="nav-btn" onclick="dShow('d-enroute')">En route</button>
+      <button class="nav-btn" onclick="dShow('d-arrived')">Arrived</button>
+      <button class="nav-btn" onclick="dShow('d-driving')">Driving</button>
+      <button class="nav-btn" onclick="dShow('d-done')">Done</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function cShow(id){
+  document.querySelectorAll('#customer-phone .screen').forEach(s=>s.classList.remove('active'));
+  var el=document.getElementById(id);if(el)el.classList.add('active');
+  if(id==='c-searching')startProgress();
+}
+function dShow(id){
+  document.querySelectorAll('#driver-phone .screen').forEach(s=>s.classList.remove('active'));
+  var el=document.getElementById(id);if(el)el.classList.add('active');
+}
+function setPayment(el){
+  el.parentElement.querySelectorAll('div').forEach(d=>{d.style.borderColor='#e0e0e0';d.style.background='#fafafa';var t=d.querySelector('div');if(t){t.style.fontWeight='400';t.style.color='#888';}});
+  el.style.borderColor='#1a1a2e';el.style.background='#f0f0f8';var t=el.querySelector('div');if(t){t.style.fontWeight='500';t.style.color='#1a1a2e';}
+}
+var progressTimer=null;
+function startProgress(){
+  var p=document.getElementById('search-progress');if(!p)return;
+  p.style.width='0%';clearInterval(progressTimer);var w=0;
+  progressTimer=setInterval(function(){w+=2;p.style.width=Math.min(w,90)+'%';if(w>=90){clearInterval(progressTimer);setTimeout(function(){cShow('c-accepted');},600);}},120);
+}
+var offerTimer=null;var offerCount=30;
+function startOffer(){
+  var pr=document.getElementById('offer-progress');var tm=document.getElementById('offer-timer');
+  if(!pr||!tm)return;offerCount=30;pr.style.width='100%';tm.textContent='30s';clearInterval(offerTimer);
+  offerTimer=setInterval(function(){offerCount--;if(tm)tm.textContent=offerCount+'s';if(pr)pr.style.width=(offerCount/30*100)+'%';if(offerCount<=0){clearInterval(offerTimer);dShow('d-online');}},1000);
+}
+var waitCount=0;var waitInterval=null;
+var arrivedScreen=document.getElementById('d-arrived');
+if(arrivedScreen){
+  new MutationObserver(function(){
+    if(arrivedScreen.classList.contains('active')){waitCount=0;clearInterval(waitInterval);waitInterval=setInterval(function(){waitCount++;var m=Math.floor(waitCount/60);var s=waitCount%60;var el=document.getElementById('wait-timer');if(el)el.textContent=m+':'+(s<10?'0':'')+s;},1000);}else{clearInterval(waitInterval);}
+  }).observe(arrivedScreen,{attributes:true,attributeFilter:['class']});
+}
+function setRating(n){document.querySelectorAll('#cust-stars .star').forEach(function(s,i){s.style.color=i<n?'#f59e0b':'#d1d5db';});}
+setRating(5);
+</script>
+</body>
+</html>
